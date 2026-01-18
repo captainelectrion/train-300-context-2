@@ -23,8 +23,8 @@ Notes:
 - This remains intentionally simple: no deep learning framework, no Transformer.
 - The model generalizes n-gram training by expanding the context window.
 - Training updates weight rows associated with the observed context-2 pattern.
-- token_embeddings.csv remains a derived visualization artifact;
-  learned embeddings are introduced in later stages.
+- token_embeddings.csv is a visualization-friendly projection for levels 100-400;
+  in later repos (500+), embeddings become a first-class learned table.
 """
 
 import logging
@@ -43,14 +43,17 @@ from toy_gpt_train.io_artifacts import (
 )
 from toy_gpt_train.math_training import argmax, cross_entropy_loss
 
-LOG: logging.Logger = get_logger("TRAIN", level="INFO")
-
-BASE_DIR: Final[Path] = Path(__file__).resolve().parents[2]
-OUTPUTS_DIR: Final[Path] = BASE_DIR / "outputs"
-TRAIN_LOG_PATH: Final[Path] = OUTPUTS_DIR / "train_log.csv"
+__all__ = [
+    "make_training_pairs",
+    "row_labeler_context2",
+    "token_row_index_context2",
+    "train_model",
+]
 
 type Context2 = tuple[int, int]
 type Context2Pair = tuple[Context2, int]
+
+LOG: logging.Logger = get_logger("TRAIN", level="INFO")
 
 
 def token_row_index_context2(context_ids: Context2, vocab_size: int) -> int:
@@ -107,12 +110,26 @@ def train_model(
 ) -> list[dict[str, float]]:
     """Train the model using gradient descent on softmax cross-entropy (context-2).
 
+    Training proceeds in epochs (full passes through all training pairs).
+    For each pair, we:
+    1. Compute the model's predicted probabilities (forward pass).
+    2. Measure how wrong the prediction was (loss).
+    3. Adjust weights to reduce the loss (gradient descent).
+
     Each example:
         context_ids = (token_id_{t-1}, token_id_t)
         target_id   = token_id_{t+1}
 
+    Args:
+        model: The model to train (weights will be modified in place).
+        pairs: List of Context2Pair training pairs.
+        learning_rate: Step size for gradient descent. Larger values learn
+            faster but may overshoot; smaller values are more stable but slower.
+        epochs: Number of complete passes through the training data.
+
     Returns:
-        A list of per-epoch metrics dictionaries (epoch, avg_loss, accuracy).
+        List of per-epoch metrics dictionaries containing epoch number,
+        average loss, and accuracy.
     """
     history: list[dict[str, float]] = []
     vocab_size: int = model.vocab_size
@@ -136,9 +153,16 @@ def train_model(
             if pred_id == target_id:
                 correct += 1
 
-            # Backward pass for softmax cross-entropy:
-            #   grad[j] = probs[j] - y[j]  where y is one-hot(target_id)
+            # Backward pass: compute gradients and update weights.
             #
+            # For softmax cross-entropy, the gradient has an elegant form:
+            #   gradient[j] = predicted_prob[j] - true_prob[j]
+            #
+            # Since true_prob is one-hot (1.0 for target, 0.0 elsewhere):
+            #   - For the target token: gradient = prob - 1.0 (negative, so weight increases)
+            #   - For other tokens: gradient = prob - 0.0 (positive, so weight decreases)
+            #
+            # This pushes probability mass toward the correct token.
             # Update the weight row for this specific (t-1, t) context.
             row_idx: int = token_row_index_context2(context_ids, vocab_size=vocab_size)
             row: list[float] = model.weights[row_idx]
@@ -148,16 +172,16 @@ def train_model(
                 grad: float = probs[j] - y
                 row[j] -= learning_rate * grad
 
+        # Compute epoch-level metrics.
         avg_loss: float = total_loss / len(pairs) if pairs else float("nan")
         accuracy: float = correct / len(pairs) if pairs else 0.0
 
-        history.append(
-            {
-                "epoch": float(epoch),
-                "avg_loss": avg_loss,
-                "accuracy": accuracy,
-            }
-        )
+        metrics: dict[str, float] = {
+            "epoch": float(epoch),
+            "avg_loss": avg_loss,
+            "accuracy": accuracy,
+        }
+        history.append(metrics)
 
         LOG.info(
             f"Epoch {epoch}/{epochs} | avg_loss={avg_loss:.6f} | accuracy={accuracy:.3f}"
@@ -167,11 +191,15 @@ def train_model(
 
 
 def main() -> None:
-    """Run a simple training demo end-to-end (context-2)."""
+    """Run a simple training demo end-to-end."""
     from toy_gpt_train.a_tokenizer import CORPUS_DIR, SimpleTokenizer
     from toy_gpt_train.b_vocab import Vocabulary
 
-    log_header(LOG, "Training Demo: Next-Token Softmax Regression (Context-2)")
+    log_header(LOG, "Training Demo: Next-Token Softmax Regression")
+
+    base_dir: Final[Path] = Path(__file__).resolve().parents[2]
+    outputs_dir: Final[Path] = base_dir / "outputs"
+    train_log_path: Final[Path] = outputs_dir / "train_log.csv"
 
     # Step 0: Identify the corpus file (single file rule).
     corpus_path: Path = find_single_corpus_file(CORPUS_DIR)
@@ -216,11 +244,11 @@ def main() -> None:
     )
 
     # Step 7: Save training metrics for analysis.
-    write_training_log(TRAIN_LOG_PATH, history)
+    write_training_log(train_log_path, history)
 
     # Step 7b: Write inspectable artifacts for downstream use.
     write_artifacts(
-        base_dir=BASE_DIR,
+        base_dir=base_dir,
         corpus_path=corpus_path,
         vocab=vocab,
         model=model,
@@ -233,10 +261,8 @@ def main() -> None:
     # Step 8: Qualitative check - what does the model predict after the first 2 tokens?
     previous_token: str = tokens[0]
     current_token: str = tokens[1]
-
     previous_id: int | None = vocab.get_token_id(previous_token)
     current_id: int | None = vocab.get_token_id(current_token)
-
     if previous_id is None or current_id is None:
         LOG.error("One of the sample tokens was not found in vocabulary.")
         return
@@ -246,7 +272,8 @@ def main() -> None:
     best_next_tok: str | None = vocab.get_id_token(best_next_id)
 
     LOG.info(
-        f"After training, most likely next token after {previous_token!r}|{current_token!r} is {best_next_tok!r} (ID: {best_next_id})."
+        f"After training, most likely next token after {previous_token!r}|{current_token!r} "
+        f"is {best_next_tok!r} (ID: {best_next_id})."
     )
 
 

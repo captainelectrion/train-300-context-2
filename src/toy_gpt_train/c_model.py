@@ -47,6 +47,8 @@ from typing import Final
 
 from datafun_toolkit.logger import get_logger, log_header
 
+__all__ = ["SimpleNextTokenModel"]
+
 LOG: logging.Logger = get_logger("MODEL", level="INFO")
 
 
@@ -54,7 +56,7 @@ class SimpleNextTokenModel:
     """A minimal next-token prediction model (context-2)."""
 
     def __init__(self, vocab_size: int) -> None:
-        """Initialize model parameters.
+        """Initialize the model with a given vocabulary size.
 
         Args:
             vocab_size: Number of unique tokens in the vocabulary.
