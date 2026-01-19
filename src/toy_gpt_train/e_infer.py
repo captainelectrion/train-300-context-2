@@ -15,8 +15,10 @@ Notes:
 - This module does NOT retrain by default.
 - If artifacts are missing, run d_train.py first.
 
-- Context-2 bootstrapping: generation starts from a single start token.
-  To form the first 2-token context, we use (start, start) as the initial context.
+Context-2 startup:
+    Generation requires 2 tokens to form the initial context (prev, curr).
+    These can be provided via --start-tokens or default to start_tokens
+    saved in 00_meta.json during training (the first 2 tokens from the corpus).
 """
 
 import argparse
@@ -30,7 +32,7 @@ from typing import Final
 from datafun_toolkit.logger import get_logger, log_header
 
 from toy_gpt_train.c_model import SimpleNextTokenModel
-from toy_gpt_train.d_train import argmax
+from toy_gpt_train.math_training import argmax
 
 __all__ = [
     "ArtifactVocabulary",
@@ -38,6 +40,7 @@ __all__ = [
     "load_meta",
     "load_model_weights_csv",
     "load_vocabulary_csv",
+    "parse_args",
     "require_artifacts",
     "top_k",
 ]
@@ -99,7 +102,7 @@ def require_artifacts(
         for p in missing:
             LOG.error(f"  - {p}")
         LOG.error("Run training first:")
-        LOG.error("  uv run python src/toy_gpt_train/d_train.py")
+        LOG.error(f"  {train_hint}")
         raise SystemExit(2)
 
 
@@ -193,28 +196,35 @@ def top_k(probs: list[float], k: int) -> list[tuple[int, float]]:
 def generate_tokens_context2(
     model: SimpleNextTokenModel,
     vocab: ArtifactVocabulary,
-    start_token: str,
+    start_tokens: tuple[str, str],
     num_tokens: int,
 ) -> list[str]:
-    """Generate tokens using a context-2 window (t-1, t).
+    """Generate tokens using a context-2 window (prev, curr).
 
-    Bootstrapping:
-        If we only have one start token, we begin with:
-            (start, start)
-        so that forward(previous1_id, current_id) is well-defined.
+    Args:
+        model: Trained context-2 model.
+        vocab: Vocabulary for token <-> ID conversion.
+        start_tokens: Tuple of (prev_token, curr_token) to start generation.
+        num_tokens: Number of new tokens to generate.
+
+    Returns:
+        List of tokens: [prev, curr, generated_1, generated_2, ...].
     """
-    generated: list[str] = [start_token]
-    start_id: int | None = vocab.get_token_id(start_token)
+    prev_token, curr_token = start_tokens
+    generated: list[str] = [prev_token, curr_token]
 
-    if start_id is None:
-        LOG.error("Start token not in vocabulary: %r", start_token)
+    prev_id: int | None = vocab.get_token_id(prev_token)
+    curr_id: int | None = vocab.get_token_id(curr_token)
+
+    if prev_id is None:
+        LOG.error(f"Start token not in vocabulary: {prev_token!r}")
+        return generated
+    if curr_id is None:
+        LOG.error(f"Start token not in vocabulary: {curr_token!r}")
         return generated
 
-    previous1_id: int = start_id
-    current_id: int = start_id
-
     for _ in range(num_tokens):
-        probs: list[float] = model.forward(previous1_id, current_id)
+        probs: list[float] = model.forward(prev_id, curr_id)
         next_id: int = argmax(probs)
         next_token: str | None = vocab.get_id_token(next_id)
 
@@ -225,43 +235,42 @@ def generate_tokens_context2(
         generated.append(next_token)
 
         # Shift the 2-token context window forward by one token.
-        previous1_id = current_id
-        current_id = next_id
+        prev_id = curr_id
+        curr_id = next_id
 
     return generated
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
+    """Parse command-line arguments for inference."""
     parser = argparse.ArgumentParser(
-        description="Toy GPT inference from saved artifacts."
+        description="Run inference using saved training artifacts (context-2)."
     )
     parser.add_argument(
-        "--start",
-        dest="start_token",
-        default="",
-        help="Start token for generation. If omitted, uses the first token in the vocabulary.",
+        "--start-tokens",
+        type=str,
+        nargs=2,
+        metavar=("PREV", "CURR"),
+        help="Two start tokens for context-2 generation (default: from meta.json).",
     )
     parser.add_argument(
-        "--num",
-        dest="num_tokens",
+        "--num-tokens",
         type=int,
         default=10,
-        help="Number of tokens to generate (not counting the start token).",
+        help="Number of tokens to generate (default: 10).",
     )
     parser.add_argument(
         "--topk",
-        dest="topk",
         type=int,
         default=3,
-        help="Show top-k next-token probabilities for the start token.",
+        help="Number of top predictions to display (default: 3).",
     )
     return parser.parse_args()
 
 
 def main() -> None:
     """Run inference using saved training artifacts."""
-    log_header(LOG, "Inference Demo: Load Artifacts and Generate Text")
+    log_header(LOG, "Inference Demo: Load Artifacts and Generate Text (Context-2)")
 
     base_dir: Final[Path] = Path(__file__).resolve().parents[2]
     artifacts_dir: Final[Path] = base_dir / "artifacts"
@@ -288,32 +297,47 @@ def main() -> None:
 
     args: argparse.Namespace = parse_args()
 
-    # Choose a start token.
-    start_token = args.start_token
-    if not start_token:
-        # Deterministic fallback: smallest token_id present
-        first_id = min(vocab.id_to_token.keys())
-        start_token = vocab.id_to_token[first_id]
+    # Choose start tokens: CLI args > meta.json > error
+    if args.start_tokens:
+        prev_token, curr_token = args.start_tokens
+    else:
+        meta_start_tokens: JsonValue = meta.get("start_tokens")
+        if (
+            isinstance(meta_start_tokens, list)
+            and len(meta_start_tokens) >= 2
+            and isinstance(meta_start_tokens[0], str)
+            and isinstance(meta_start_tokens[1], str)
+        ):
+            prev_token = meta_start_tokens[0]
+            curr_token = meta_start_tokens[1]
+        else:
+            LOG.error(
+                "No start_tokens in meta.json and none provided via --start-tokens. "
+                "Re-run d_train.py to generate start_tokens, or provide --start-tokens."
+            )
+            return
+
+    start_tokens: tuple[str, str] = (prev_token, curr_token)
 
     LOG.info(
         f"Loaded repo_name={meta.get('repo_name')} model_kind={meta.get('model_kind')}"
     )
     LOG.info(f"Vocab size: {v}")
-    LOG.info(f"Start token: {start_token}")
-    LOG.info(f"Context-2 bootstrap: ({start_token}, {start_token})")
+    LOG.info(f"Start tokens: {prev_token!r}, {curr_token!r}")
 
-    start_id = vocab.get_token_id(start_token)
-    if start_id is not None:
-        probs: list[float] = model.forward(start_id, start_id)
-        LOG.info(f"Top next-token predictions after {start_token}|{start_token}:")
+    prev_id = vocab.get_token_id(prev_token)
+    curr_id = vocab.get_token_id(curr_token)
+    if prev_id is not None and curr_id is not None:
+        probs: list[float] = model.forward(prev_id, curr_id)
+        LOG.info(f"Top next-token predictions after {prev_token}|{curr_token}:")
         for tok_id, prob in top_k(probs, k=max(1, args.topk)):
             tok = vocab.get_id_token(tok_id)
-            LOG.info(f"  {tok} (ID {tok_id}): {prob:.4f}")
+            LOG.info(f"  {tok!r} (ID {tok_id}): {prob:.4f}")
 
     generated = generate_tokens_context2(
         model=model,
         vocab=vocab,
-        start_token=start_token,
+        start_tokens=start_tokens,
         num_tokens=max(0, args.num_tokens),
     )
 

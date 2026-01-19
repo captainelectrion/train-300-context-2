@@ -27,6 +27,7 @@ Notes:
   in later repos (500+), embeddings become a first-class learned table.
 """
 
+import json
 import logging
 from pathlib import Path
 from typing import Final
@@ -35,6 +36,7 @@ from datafun_toolkit.logger import get_logger, log_header
 
 from toy_gpt_train.c_model import SimpleNextTokenModel
 from toy_gpt_train.io_artifacts import (
+    JsonObject,
     RowLabeler,
     VocabularyLike,
     find_single_corpus_file,
@@ -53,36 +55,62 @@ __all__ = [
 type Context2 = tuple[int, int]
 type Context2Pair = tuple[Context2, int]
 
+JsonScalar = str | int | float | bool | None
+JsonValue = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
+
 LOG: logging.Logger = get_logger("TRAIN", level="INFO")
 
 
 def token_row_index_context2(context_ids: Context2, vocab_size: int) -> int:
     """Return the row index for a context-2 token sequence.
 
-    Context order:
-        (token_id_{t-1}, token_id_t)
+    We need to map a 2D context (previous, current) to a 1D row index.
+    This is like converting 2D coordinates to a 1D array index.
 
-    Flattening scheme:
-        row_index = prev * vocab_size + curr
+    Example with vocab_size=10:
+        context (0, 0) -> row 0
+        context (0, 1) -> row 1
+        context (0, 9) -> row 9
+        context (1, 0) -> row 10
+        context (1, 1) -> row 11
+        context (2, 5) -> row 25
 
-    This is the context-2 analogue of:
-        unigram: row = token_id
+    Formula:
+        row_index = token_id_{t-1} * vocab_size + token_id_t
+
+    This creates vocab_size * vocab_size unique rows,
+    one for each possible (previous, current) pair.
     """
     token_id_t_minus_1, token_id_t = context_ids
     return token_id_t_minus_1 * vocab_size + token_id_t
 
 
 def row_labeler_context2(vocab: VocabularyLike, vocab_size: int) -> RowLabeler:
-    """Map a context-2 row index to a label like 'tok_{t-1}|tok_t'."""
+    """Map a context-2 row index back to a readable label like 'the|cat'.
+
+    This reverses the flattening done by token_row_index_context2().
+
+    Example with vocab_size=10:
+        row 0  -> (0, 0) -> "tok_0|tok_0"
+        row 25 -> (2, 5) -> "tok_2|tok_5"
+
+    The math (integer division and modulo) undoes the flattening:
+        token_id_{t-1} = row_index // vocab_size  (which "block" of vocab_size)
+        token_id_t     = row_index % vocab_size   (position within that block)
+    """
 
     def label(row_idx: int) -> str:
+        # Reverse the flattening: row_index -> (token_id_{t-1}, token_id_t)
         token_id_t_minus_1: int = row_idx // vocab_size
         token_id_t: int = row_idx % vocab_size
 
-        tok1: str = vocab.get_id_token(token_id_t_minus_1) or f"id_{token_id_t_minus_1}"
-        tok0: str = vocab.get_id_token(token_id_t) or f"id_{token_id_t}"
+        # Convert token IDs to readable strings
+        token_ids: list[int] = [token_id_t_minus_1, token_id_t]
+        tokens: list[str] = [
+            vocab.get_id_token(tid) or f"id_{tid}" for tid in token_ids
+        ]
 
-        return f"{tok1}|{tok0}"
+        return "|".join(tokens)
 
     return label
 
@@ -221,7 +249,7 @@ def main() -> None:
     for tok in tokens:
         tok_id: int | None = vocab.get_token_id(tok)
         if tok_id is None:
-            LOG.error("Token not found in vocabulary: %r", tok)
+            LOG.error(f"Token not found in vocabulary: {tok}")
             return
         token_ids.append(tok_id)
 
@@ -257,6 +285,16 @@ def main() -> None:
         epochs=epochs,
         row_labeler=row_labeler_context2(vocab, vocab_size),
     )
+
+    # 7c: After write_artifacts(), append start_tokens to meta
+    meta_path: Path = base_dir / "artifacts" / "00_meta.json"
+    with meta_path.open("r", encoding="utf-8") as f:
+        meta: JsonObject = json.load(f)
+    start_tokens: list[str] = tokens[:2]  # context-2
+    meta["start_tokens"] = list(start_tokens)  # explicit list for JSON serialization
+    with meta_path.open("w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2, sort_keys=True)
+        f.write("\n")
 
     # Step 8: Qualitative check - what does the model predict after the first 2 tokens?
     previous_token: str = tokens[0]

@@ -2,6 +2,15 @@
 
 Defines a minimal next-token prediction model for a context-2 setting
 (uses two tokens in sequence as context).
+A context-2 model computes P(next | previous, current).
+
+Initial token sequence for demonstration:
+((tokens[0], tokens[1]), tokens[2])
+#  prev       curr        next
+
+Slide forward by one token for each prediction.
+((tokens[1], tokens[2]), tokens[3])
+#  prev       curr        next
 
 Responsibilities:
 - Represent a simple parameterized model that maps a
@@ -122,8 +131,8 @@ def main() -> None:
     tokenizer: SimpleTokenizer = SimpleTokenizer()
     tokens: list[str] = tokenizer.get_tokens()
 
-    if len(tokens) < 2:
-        LOG.info("Need at least two tokens for context-2 demonstration.")
+    if len(tokens) < 3:
+        LOG.info("Need at least three tokens for context-2 demonstration.")
         return
 
     # Step 2: Build vocabulary.
@@ -133,8 +142,8 @@ def main() -> None:
     model: SimpleNextTokenModel = SimpleNextTokenModel(vocab_size=vocab.vocab_size())
 
     # Step 4: Select context tokens (previous, current).
-    previous_token: str = tokens[1]
-    current_token: str = tokens[2]
+    previous_token: str = tokens[0]
+    current_token: str = tokens[1]
 
     previous_id: int | None = vocab.get_token_id(previous_token)
     current_id: int | None = vocab.get_token_id(current_token)
