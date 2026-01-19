@@ -13,6 +13,14 @@ and this project adheres to **[Semantic Versioning](https://semver.org/spec/v2.0
 
 ---
 
+## [0.9.4] - 2026-01-18
+
+### Updated
+
+- update io_artifacts.py artifact path
+
+---
+
 ## [0.9.3] - 2026-01-18
 
 ### Updated
@@ -57,7 +65,8 @@ git tag v0.9.0 -m "0.9.0"
 git push origin v0.9.0
 ```
 
-[Unreleased]: https://github.com/toy-gpt/train-300-context-2/compare/v0.9.3...HEAD
+[Unreleased]: https://github.com/toy-gpt/train-300-context-2/compare/v0.9.4...HEAD
+[0.9.4]: https://github.com/toy-gpt/train-300-context-2/releases/tag/v0.9.4
 [0.9.3]: https://github.com/toy-gpt/train-300-context-2/releases/tag/v0.9.3
 [0.9.2]: https://github.com/toy-gpt/train-300-context-2/releases/tag/v0.9.2
 [0.9.1]: https://github.com/toy-gpt/train-300-context-2/releases/tag/v0.9.1
